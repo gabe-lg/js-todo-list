@@ -1,4 +1,4 @@
-(function () {
+(() => {
   "use strict";
 
   angular.module("TodoListApp", [])
@@ -29,13 +29,13 @@
       this.fromRedo = fromRedo;
     }
 
-    s.setState = function () {
+    s.setState = () => {
       /** Sets the states of buttons between active and disabled. */
       s.states = [
         s.undoList.length ? "" : "disabled",
         s.redoList.length ? "" : "disabled",
         (s.todoList.length ? "" : "disabled") + " dropdown-toggle",
-        "dropdown-toggle"];
+        ""];
     }
 
     s.setItems = () => {
@@ -43,7 +43,7 @@
       s.items = s.todoList;
     }
 
-    s.modify = function (item) {
+    s.modify = item => {
       /** Adds to or removes an item from `todoList`. */
 
       // If the item has been undone, push it into `redoList`.
@@ -92,52 +92,36 @@
 
   TodoListOptions.$inject = ["$scope", "$timeout"];
   function TodoListOptions(s, tm) {
-    s.buttons = ["Undo", "Redo", "Save", "Load"];
+    s.buttons = ["Undo", "Redo", "Save", "Load..."];
     s.setState();
     // dropdown menus
-    s.dropdown = ["", "", "dropdown", "dropdown"];
+    s.dropdown = ["", "", "dropdown", ""];
     s.dropdownContent = [];
     s.dropdownContent[2] = [
       "Download current list",
       "Download raw data [.json]"
     ];
-    s.dropdownContent[3] = [];
-    s.dropdownContent[3][0] = "hi";
 
-    s.options = function (buttonIndex) {
+    s.options = buttonIndex => {
       if (buttonIndex == 0) {
         // undo
-        var item = s.undoList.pop();
+        const item = s.undoList.pop();
         item.action = !item.action;
         item.fromUndo = true;
         s.modify(item);
       }
       if (buttonIndex == 1) {
         // redo
-        var item = s.redoList.pop();
+        const item = s.redoList.pop();
         item.action = !item.action;
         item.fromUndo = false;
         item.fromRedo = true;
         s.modify(item);
       }
-      if (buttonIndex == 2) {
-        // save
-      }
       if (buttonIndex == 3) {
         // load
-      }
-    }
-
-    s.dropdownOptions = function (itemName) {
-      if (itemName == s.dropdownContent[2][0]) {
-        downloadTxt(s.todoList);
-      }
-      if (itemName == s.dropdownContent[2][1]) {
-        downloadJSON(s.todoList, s.undoList, s.redoList);
-      }
-      if (itemName == s.dropdownContent[3][0]) {
         let content = "";
-        function timeout () {
+        function timeout() {
           tm(() => {
             if (!getContent()) {
               timeout();
@@ -154,11 +138,20 @@
         timeout();
       }
     }
+
+    s.dropdownOptions = itemName => {
+      if (itemName == s.dropdownContent[2][0]) {
+        downloadTxt(s.todoList);
+      }
+      if (itemName == s.dropdownContent[2][1]) {
+        downloadJSON(s.todoList, s.undoList, s.redoList);
+      }
+    }
   }
 
   TodoListAddController.$inject = ["$scope"];
   function TodoListAddController(s) {
-    s.addItem = function () {
+    s.addItem = () => {
       if (s.value) { s.modify(new s.Item(true, s.value, s.todoList.length)); }
     }
   }
@@ -167,7 +160,7 @@
   function TodoListShowController(s) {
     s.setItems();
 
-    s.removeItem = function (itemIndex) {
+    s.removeItem = itemIndex => {
       s.modify(new s.Item(false, s.todoList[itemIndex], itemIndex));
     }
   }
