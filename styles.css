@@ -4,3 +4,8 @@ body {
   font-family: "Caveat", cursive;
   font-size: 150%;
 }
+
+.btn.disabled {
+  color: rgb(175, 175, 175);
+  border-color: rgb(175, 175, 175);
+}
