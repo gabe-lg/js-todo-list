@@ -32,10 +32,15 @@
     s.setState = function () {
       /** Sets the states of buttons between active and disabled. */
       s.states = [
-        s.undoList.length == 0 ? "disabled" : "",
-        s.redoList.length == 0 ? "disabled" : "",
-        s.todoList.length == 0 ? "disabled" : "",
-        ""];
+        s.undoList.length ? "" : "disabled",
+        s.redoList.length ? "" : "disabled",
+        (s.todoList.length ? "" : "disabled") + " dropdown-toggle",
+        "dropdown-toggle"];
+    }
+
+    s.setItems = () => {
+      /** Updates the items in `ShowController` */
+      s.items = s.todoList;
     }
 
     s.modify = function (item) {
@@ -60,12 +65,44 @@
 
       s.setState();
     }
+
+    s.load = content => {
+      /** 
+       * Opens a file dialog, and imports file into app.
+       * Supported file extensions: .json and .txt.
+       */
+      if (content.type == "json") {
+        const contentJSON = JSON.parse(content.text);
+        s.todoList = contentJSON.todo;
+        s.undoList = contentJSON.undo;
+        s.redoList = contentJSON.redo;
+      } else {
+        const items = content.text.split("\n");
+        s.todoList = [];
+        items.forEach(item => {
+          if (item[0] != '~' && item) {
+            s.todoList.push(item.replace(/^\d.\s*/, ""));
+          }
+        });
+      }
+      s.setState();
+      s.setItems();
+    }
   }
 
-  TodoListOptions.$inject = ["$scope"];
-  function TodoListOptions(s) {
+  TodoListOptions.$inject = ["$scope", "$timeout"];
+  function TodoListOptions(s, tm) {
     s.buttons = ["Undo", "Redo", "Save", "Load"];
     s.setState();
+    // dropdown menus
+    s.dropdown = ["", "", "dropdown", "dropdown"];
+    s.dropdownContent = [];
+    s.dropdownContent[2] = [
+      "Download current list",
+      "Download raw data [.json]"
+    ];
+    s.dropdownContent[3] = [];
+    s.dropdownContent[3][0] = "hi";
 
     s.options = function (buttonIndex) {
       if (buttonIndex == 0) {
@@ -90,6 +127,33 @@
         // load
       }
     }
+
+    s.dropdownOptions = function (itemName) {
+      if (itemName == s.dropdownContent[2][0]) {
+        downloadTxt(s.todoList);
+      }
+      if (itemName == s.dropdownContent[2][1]) {
+        downloadJSON(s.todoList, s.undoList, s.redoList);
+      }
+      if (itemName == s.dropdownContent[3][0]) {
+        let content = "";
+        function timeout () {
+          tm(() => {
+            if (!getContent()) {
+              timeout();
+            } else {
+              content = getContent();
+              console.log(content);
+              resetContent();
+
+              s.load(content);
+            }
+          }, 100);
+        }
+        loadData();
+        timeout();
+      }
+    }
   }
 
   TodoListAddController.$inject = ["$scope"];
@@ -101,7 +165,7 @@
 
   TodoListShowController.$inject = ["$scope"];
   function TodoListShowController(s) {
-    s.items = s.todoList;
+    s.setItems();
 
     s.removeItem = function (itemIndex) {
       s.modify(new s.Item(false, s.todoList[itemIndex], itemIndex));
